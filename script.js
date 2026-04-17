@@ -64,7 +64,11 @@ function addEdge() {
 // DRAW CURVED EDGES
 function redrawEdges() {
     let svg = document.getElementById("lines");
-    svg.innerHTML = "";
+    Array.from(svg.children).forEach(child => {
+        if (child.tagName.toLowerCase() === "path") {
+            child.remove();
+        }
+    });
 
     edges.forEach((e) => {
         let x1 = nodes[e.from].offsetLeft + 35;
@@ -72,14 +76,20 @@ function redrawEdges() {
         let x2 = nodes[e.to].offsetLeft + 35;
         let y2 = nodes[e.to].offsetTop + 35;
 
-        let dx = (x1 + x2)/2;
-        let dy = (y1 + y2)/2 - 60;
+        let dx = (x1 + x2) / 2;
+        let dy = (y1 + y2) / 2 - 60;
 
-        let path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        let color = e.from.startsWith("P") ? "blue" : "red";
+
         path.setAttribute("d", `M ${x1} ${y1} Q ${dx} ${dy} ${x2} ${y2}`);
         path.setAttribute("fill", "none");
-        path.setAttribute("stroke", e.from.startsWith("P") ? "blue" : "red");
+        path.setAttribute("stroke", color);
+        path.setAttribute("color", color);
         path.setAttribute("stroke-width", "2");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("marker-end", "url(#arrowhead)");
 
         svg.appendChild(path);
     });
