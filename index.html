@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Deadlock Detection Graph Tool</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<h1>💻 Deadlock Detection Graph Tool</h1>
+
+<div class="container">
+
+<div class="panel">
+<button onclick="addNode('process')">Add Process</button>
+<button onclick="addNode('resource')">Add Resource</button>
+
+<br><br>
+
+<input id="from" placeholder="From (P1/R1)">
+<input id="to" placeholder="To (P1/R1)">
+<button onclick="addEdge()">Add Arrow</button>
+
+<br><br>
+
+<button onclick="detectDeadlock()">🚨 Detect Deadlock</button>
+<button onclick="clearGraph()">Clear</button>
+</div>
+
+<div>
+<div id="graph">
+<svg id="lines" width="700" height="520"></svg>
+</div>
+
+<div id="result"></div>
+</div>
+
+</div>
+
+<script src="script.js" defer></script>
+
+</body>
+</html>

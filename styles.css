@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    font-family: Arial;
+    background: linear-gradient(135deg, #081654, #020004);
+    color: white;
+    text-align: center;
+}
+
+.container {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+}
+
+.panel {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 12px;
+    width: 260px;
+}
+
+button {
+    margin: 5px;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #a30a36;
+    color: white;
+    cursor: pointer;
+}
+
+input {
+    margin: 5px;
+    padding: 8px;
+    width: 80%;
+    border-radius: 5px;
+    border: none;
+}
+
+#graph {
+    position: relative;
+    width: 700px;
+    height: 520px;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #222;
+    overflow: hidden;
+}
+
+.node {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    line-height: 70px;
+    text-align: center;
+    font-weight: bold;
+    cursor: grab;
+}
+
+.process { background: green; border-radius: 50%; }
+.resource { background: red; }
+
+#result {
+    margin-top: 15px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
