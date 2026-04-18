@@ -1,4 +1,4 @@
-let nodes = {}, edges = [];
+let nodes = {}, edges = [], cycleEdges = new Set();
 
 // SERIAL FIX
 function getNextId(type) {
@@ -39,7 +39,7 @@ function addNode(type) {
     nodes[id] = div;
 }
 
-// DELETE
+// DELETE NODE
 function deleteNode(id, el) {
     el.remove();
     delete nodes[id];
@@ -61,9 +61,10 @@ function addEdge() {
     redrawEdges();
 }
 
-// DRAW CURVED EDGES
+// DRAW EDGES
 function redrawEdges() {
     let svg = document.getElementById("lines");
+
     Array.from(svg.children).forEach(child => {
         if (child.tagName.toLowerCase() === "path") {
             child.remove();
@@ -80,39 +81,34 @@ function redrawEdges() {
         let dy = (y1 + y2) / 2 - 60;
 
         let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        let color = e.from.startsWith("P") ? "blue" : "red";
+        let key = e.from + '-' + e.to;
+        let isCycle = cycleEdges.has(key);
 
         path.setAttribute("d", `M ${x1} ${y1} Q ${dx} ${dy} ${x2} ${y2}`);
         path.setAttribute("fill", "none");
-        path.setAttribute("stroke", color);
-        path.setAttribute("color", color);
-        path.setAttribute("stroke-width", "2");
-        path.setAttribute("stroke-linecap", "round");
-        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("class", isCycle ? "cycle-edge" : "graph-edge");
+        path.setAttribute("color", isCycle ? "#ff2f2f" : "#111");
         path.setAttribute("marker-end", "url(#arrowhead)");
 
         svg.appendChild(path);
     });
 }
 
-// 🔥 CORRECT DEADLOCK DETECTION
+// 🔥 DEADLOCK DETECTION + SUGGESTIONS
 function detectDeadlock() {
     let graph = {};
     let parent = {};
     let cycle = [];
 
-    // Step 1: Build Wait-For Graph
+    // Build Wait-For Graph
     edges.forEach(e1 => {
         if(e1.from.startsWith("P") && e1.to.startsWith("R")) {
-
             edges.forEach(e2 => {
                 if(e2.from === e1.to && e2.to.startsWith("P")) {
-
                     if(!graph[e1.from]) graph[e1.from] = [];
                     graph[e1.from].push(e2.to);
                 }
             });
-
         }
     });
 
@@ -130,7 +126,6 @@ function detectDeadlock() {
             }
 
             else if(recStack[nei]) {
-                // 🔥 Build cycle path
                 cycle = [nei];
                 let cur = node;
 
@@ -149,10 +144,10 @@ function detectDeadlock() {
         return false;
     }
 
-    // Reset colors
+    // Reset inline node styling so CSS can render process/resource defaults properly
     Object.values(nodes).forEach(n => {
-        if(n.classList.contains("process"))
-            n.style.background = "green";
+        n.style.background = "";
+        n.style.color = "";
     });
 
     // Run DFS
@@ -160,34 +155,88 @@ function detectDeadlock() {
         if(!visited[node]) {
             if(dfs(node)) {
 
-                // 🔥 Highlight deadlock nodes
-                cycle.forEach(p => {
-                    if(nodes[p]) {
-                        nodes[p].style.background = "yellow";
-                        nodes[p].style.color = "black";
-                    }
-                });
+                // Build the full alternating P-R cycle path from the actual edge list
+                let fullCycle = [];
+                for (let i = 0; i < cycle.length - 1; i++) {
+                    let fromProcess = cycle[i];
+                    let toProcess = cycle[i + 1];
 
-                // 🔥 Suggestion
-                let suggestion =
-                    "Terminate " + cycle[0] + " OR Preempt a resource";
+                    edges.forEach(e1 => {
+                        if (e1.from === fromProcess && e1.to.startsWith("R")) {
+                            edges.forEach(e2 => {
+                                if (e2.from === e1.to && e2.to === toProcess) {
+                                    fullCycle.push(fromProcess);
+                                    fullCycle.push(e1.to);
+                                }
+                            });
+                        }
+                    });
+                }
 
-                document.getElementById("result").innerHTML =
-                    "🔴 Deadlock Detected!<br>" +
-                    "Cycle: " + cycle.join(" → ") + "<br>" +
-                    "Suggestion: " + suggestion;
+                if (fullCycle.length > 0) {
+                    fullCycle.push(fullCycle[0]);
+                } else {
+                    fullCycle = [...cycle, cycle[0]];
+                }
 
+                cycleEdges.clear();
+                for (let i = 0; i < fullCycle.length - 1; i++) {
+                    cycleEdges.add(fullCycle[i] + '-' + fullCycle[i + 1]);
+                }
+                redrawEdges();
+
+                // 🔥 IMPROVED SUGGESTIONS
+                // 🔥 FINAL WORKING SUGGESTION LOGIC
+
+                // OUTPUT
+                let output = "";
+
+                output += "🔴 <b>Deadlock Detected!</b><br><br>";
+
+                output += "🔁 <b>Cycle Found:</b><br>";
+                output += fullCycle.join(" → ") + "<br><br>";
+
+                output += "💡 <b>How to resolve:</b><br>";
+                output += "👉 Break ANY one of these:<br><br>";
+
+// Remove edges
+for (let i = 0; i < fullCycle.length - 1; i++) {
+    output += `• Remove dependency: ${fullCycle[i]} → ${fullCycle[i+1]}<br>`;
+}
+
+// Processes
+fullCycle.forEach(n => {
+    if (n.startsWith("P")) {
+        output += `• OR terminate process <b>${n}</b><br>`;
+    }
+});
+
+// Resources
+fullCycle.forEach(n => {
+    if (n.startsWith("R")) {
+        output += `• OR preempt resource <b>${n}</b><br>`;
+    }
+});
+
+output += "<br>✔ Breaking ANY one will remove deadlock";
+                output += "<div class='warning-text'>⚠️ Cycle is highlighted in red</div>";
+document.getElementById("result").innerHTML = output;
                 return;
             }
         }
     }
 
+    // No deadlock
+    cycleEdges.clear();
+    redrawEdges();
+
     document.getElementById("result").innerHTML =
-        "🟢 No Deadlock (Safe State)";
+        "🟢 <b>No Deadlock (Safe State)</b>";
 }
 
 // CLEAR
 function clearGraph(){
+    cycleEdges.clear();
     location.reload();
 }
 
