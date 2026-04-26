@@ -1,0 +1,11 @@
+deadlock: A deadlock is a situation in concurrent systems where two or more processes or threads are each waiting for the other to release a resource, so none of them can proceed.
+
+Key points:
+- Each participant holds at least one resource.
+- Each participant is waiting for another resource held by someone else.
+- No one can make progress unless some resource is released externally.
+
+Example:
+- Thread A holds Resource 1 and waits for Resource 2.
+- Thread B holds Resource 2 and waits for Resource 1.
+- Neither can continue, so the system is stuck.
