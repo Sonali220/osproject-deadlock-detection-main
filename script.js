@@ -204,23 +204,35 @@ for (let i = 0; i < fullCycle.length - 1; i++) {
     output += `• Remove dependency: ${fullCycle[i]} → ${fullCycle[i+1]}<br>`;
 }
 
-// Processes
+// Processes (unique only)
+let shownP = new Set();
 fullCycle.forEach(n => {
-    if (n.startsWith("P")) {
+    if (n.startsWith("P") && !shownP.has(n)) {
         output += `• OR terminate process <b>${n}</b><br>`;
+        shownP.add(n);
     }
 });
 
-// Resources
+// Resources (unique only)
+let shownR = new Set();
 fullCycle.forEach(n => {
-    if (n.startsWith("R")) {
+    if (n.startsWith("R") && !shownR.has(n)) {
         output += `• OR preempt resource <b>${n}</b><br>`;
+        shownR.add(n);
     }
 });
 
 output += "<br>✔ Breaking ANY one will remove deadlock";
                 output += "<div class='warning-text'>⚠️ Cycle is highlighted in red</div>";
-document.getElementById("result").innerHTML = output;
+// document.getElementById("result").innerHTML = output;
+let resultBox = document.getElementById("result");
+
+if (!resultBox) {
+    alert("Result div not found!");
+    return;
+}
+
+resultBox.innerHTML = output;
                 return;
             }
         }
